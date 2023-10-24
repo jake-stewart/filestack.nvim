@@ -42,6 +42,9 @@ end
 
 local function navigate(direction)
     if cursor + direction > #filestack or cursor + direction <= 0 then
+        if #filestack == 0 and direction == -1 then
+            vim.cmd.norm({CTRL_O, bang = true})
+        end
         return
     end
     cursor = cursor + direction
