@@ -28,20 +28,9 @@ local function jump(direction, count)
     local steps = 0
     for _ = 1, count do
         jumpcursor = jumpcursor + direction
-        if jumpcursor > #jumplist or jumpcursor <= 0 then
+        if jumpcursor > #jumplist
+                or jumpcursor <= 0 or bufnr ~= jumplist[jumpcursor]["bufnr"] then
             break
-        end
-        if bufnr ~= jumplist[jumpcursor]["bufnr"] then
-            bufnr = jumplist[jumpcursor]["bufnr"]
-            local bufferName = vim.fn.buffer_name(bufnr)
-            local bufferPath = vim.fn.fnamemodify(bufferName, ":p")
-            cursor = cursor + direction
-            if cursor == 0 then
-                table.insert(filestack, 1, bufferPath)
-                cursor = 1
-            elseif cursor > #jumplist then
-                table.insert(filestack, bufferPath)
-            end
         end
         steps = steps + 1
     end
