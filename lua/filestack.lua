@@ -73,11 +73,18 @@ local function setupAutocmd()
 end
 
 return {
-    setup = function()
+    setup = function(opts)
+        local defult_config = {
+            keymaps = {
+                jump = { backward = "<c-o>", forward = "<c-i>" },
+                navigate = { backward = "<m-o>", forward = "<m-i>" },
+            }
+        }
+        local merged_config = vim.tbl_extend("force", defult_config, opts or {})
         setupAutocmd()
-        vim.keymap.set({"n", "v"}, "<c-i>", function() jump(1, 1) end)
-        vim.keymap.set({"n", "v"}, "<c-o>", function() jump(-1, 1) end)
-        vim.keymap.set({"n", "v"}, "<m-i>", function() navigate(1) end)
-        vim.keymap.set({"n", "v"}, "<m-o>", function() navigate(-1) end)
+        vim.keymap.set({"n", "v"}, merged_config.keymaps.jump.forward, function() jump(1, 1) end)
+        vim.keymap.set({"n", "v"}, merged_config.keymaps.jump.backward, function() jump(-1, 1) end)
+        vim.keymap.set({"n", "v"}, merged_config.keymaps.navigate.forward, function() navigate(1) end)
+        vim.keymap.set({"n", "v"}, merged_config.keymaps.navigate.backward, function() navigate(-1) end)
     end,
 }
