@@ -6,24 +6,7 @@ local filestack = {}
 local CTRL_I = vim.api.nvim_replace_termcodes('<C-I>', true, true, true)
 local CTRL_O = vim.api.nvim_replace_termcodes('<C-O>', true, true, true)
 
--- local function debug()
---     local buffer = ""
---     for i, s in ipairs(filestack) do
---         if (i == cursor) then
---             buffer = buffer .. " ["  ..s .. "] "
---         else
---             buffer = buffer .. " " .. s .. " "
---         end
---     end
---     vim.print(buffer)
--- end
-
 local function filestackPush()
-    local success, mc = pcall(require, "multicursor-nvim")
-    if success then
-        mc.clearCursors()
-    end
-
     local path = vim.fn.expand("%:p")
     if path == "" then
         return
@@ -39,14 +22,13 @@ local function filestackPush()
 end
 
 local function jump(direction, count)
-    local success, mc = pcall(require, "multicursor-nvim")
-    if success and mc.hasCursors() then
+    local mc = package.loaded["multicursor-nvim"]
+    if mc and mc.hasCursors() then
         if direction == 1 then
             mc.jumpForward()
         else
             mc.jumpBackward()
         end
-        return
     end
     local jumplist, jumpcursor = table.unpack(vim.fn.getjumplist())
     jumpcursor = jumpcursor + 1
@@ -87,27 +69,30 @@ local function setupAutocmd()
     })
 end
 
-return {
-    setup = function(opts)
-        local defaults = {
-            keymaps = {
-                jump = { backward = "<c-o>", forward = "<c-i>" },
-                navigate = { backward = "<m-o>", forward = "<m-i>" },
-            }
+local M = {}
+
+function M.setup(opts)
+    local defaults = {
+        keymaps = {
+            jump = { backward = "<c-o>", forward = "<c-i>" },
+            navigate = { backward = "<m-o>", forward = "<m-i>" },
         }
-        local config = vim.tbl_extend("force", defaults, opts or {})
-        setupAutocmd()
-        vim.keymap.set({"n", "v"}, config.keymaps.jump.forward, function()
-            jump(1, vim.v.count == 0 and 1 or vim.v.count)
-        end)
-        vim.keymap.set({"n", "v"}, config.keymaps.jump.backward, function()
-            jump(-1, vim.v.count == 0 and 1 or vim.v.count)
-        end)
-        vim.keymap.set({"n", "v"}, config.keymaps.navigate.forward, function()
-            navigate(1)
-        end)
-        vim.keymap.set({"n", "v"}, config.keymaps.navigate.backward, function()
-            navigate(-1)
-        end)
-    end,
-}
+    }
+    local config = vim.tbl_extend("force", defaults, opts or {})
+    setupAutocmd()
+    filestackPush()
+    vim.keymap.set({"n", "v"}, config.keymaps.jump.forward, function()
+        jump(1, vim.v.count == 0 and 1 or vim.v.count)
+    end)
+    vim.keymap.set({"n", "v"}, config.keymaps.jump.backward, function()
+        jump(-1, vim.v.count == 0 and 1 or vim.v.count)
+    end)
+    vim.keymap.set({"n", "v"}, config.keymaps.navigate.forward, function()
+        navigate(1)
+    end)
+    vim.keymap.set({"n", "v"}, config.keymaps.navigate.backward, function()
+        navigate(-1)
+    end)
+end
+
+return M
